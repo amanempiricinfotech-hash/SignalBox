@@ -31,5 +31,17 @@ practise the whole workflow on a repository you own:
 ./tools/github/setup_github.sh <your-username>/SignalBox
 ```
 
-The board is not created by the script. GitHub Projects v2 needs a few manual
-steps; see [`docs/PROJECT_BOARD.md`](../../docs/PROJECT_BOARD.md).
+## The project board
+
+`create_project_board.sh` creates the Projects v2 board, its seven columns and
+adds every open issue:
+
+```bash
+gh auth refresh -s project,read:project      # once; opens a browser
+./tools/github/create_project_board.sh <owner> <owner>/SignalBox
+```
+
+The `project` scope is not part of a default `gh auth login`, which is why this
+is a separate script from `setup_github.sh`. Grouping the board by the
+`Workflow` field and enabling the automation workflows still has to be done in
+the web UI; see [`docs/PROJECT_BOARD.md`](../../docs/PROJECT_BOARD.md).

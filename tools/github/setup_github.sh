@@ -57,15 +57,13 @@ LABELS=(
   "blocked|000000|Waiting on another issue"
 )
 
+# --force creates the label, or updates it when it already exists, so this
+# step is safe to re-run after a partial failure.
 for entry in "${LABELS[@]}"; do
   IFS='|' read -r name colour description <<< "$entry"
-  if gh label list --repo "$REPO" --limit 200 --json name --jq '.[].name' | grep -Fxq "$name"; then
-    run gh label edit "$name" --repo "$REPO" --color "$colour" --description "$description"
-    echo "    updated: $name"
-  else
-    run gh label create "$name" --repo "$REPO" --color "$colour" --description "$description"
-    echo "    created: $name"
-  fi
+  run gh label create "$name" --repo "$REPO" --color "$colour" \
+    --description "$description" --force
+  echo "    ok: $name"
 done
 
 echo "==> Milestones"

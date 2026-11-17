@@ -31,8 +31,23 @@ order:
 
 ## Creating the board
 
-GitHub Projects v2 is not fully scriptable with the plain `gh` CLI, so this part
-is quickest by hand.
+There is a script for most of it:
+
+```bash
+# one-off: the default gh login does not carry the project scope.
+# This opens a browser, so it needs an interactive terminal.
+gh auth refresh -s project,read:project
+
+./tools/github/create_project_board.sh <owner> <owner>/SignalBox
+```
+
+It creates the project, adds a `Workflow` single-select field carrying the seven
+columns, and adds every open issue. Two steps are still left to the web UI
+afterwards, because the `gh` CLI cannot drive them: grouping the board by
+`Workflow`, and enabling the automation workflows. The script prints both when
+it finishes.
+
+### Doing it by hand instead
 
 1. Open the repository, choose **Projects > New project > Board**.
 2. Name it `SignalBox Development`.
