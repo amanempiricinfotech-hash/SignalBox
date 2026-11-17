@@ -1,69 +1,68 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../shared/models/notification_priority.dart';
-import '../../shared/models/rule_models.dart';
 
-/// Deterministic demo data.
+/// Developer fixtures. **Never** inserted automatically.
 ///
-/// SignalBox is local-first and, on a fresh install without the Android
-/// notification-listener permission, there is nothing to show. The seed gives
-/// every contributor the same inbox so that issues can be reproduced with
-/// identical steps on any machine.
-class SeedData {
-  const SeedData._();
+/// SignalBox shows the user's own notifications and the applications actually
+/// installed on their device. Nothing in this file runs unless a developer
+/// explicitly triggers it from Settings in a debug build.
+///
+/// It exists for one reason: the issues catalogued in `docs/SEEDED_BUGS.md`
+/// need a fixed dataset so that their reproduction steps give the same result
+/// on every machine. Reproducing a bug against whatever happens to be in your
+/// own notification shade is not repeatable.
+///
+/// The data is deliberately fictional and obviously so. It is never shipped to
+/// a user: [generate] is only reachable behind `kDebugMode`.
+class DebugSampleData {
+  const DebugSampleData._();
 
-  static const List<(String packageName, String label)> apps = [
-    ('com.whatsapp', 'WhatsApp'),
-    ('com.google.android.gm', 'Gmail'),
-    ('com.slack', 'Slack'),
-    ('com.instagram.android', 'Instagram'),
-    ('com.hdfcbank.payzapp', 'HDFC Bank'),
-    ('in.swiggy.android', 'Swiggy'),
-    ('com.android.systemui', 'System UI'),
+  /// Fictional applications used only by the fixtures.
+  static const List<(String packageName, String label)> fixtureApps = [
+    ('com.example.chat', 'Fixture Chat'),
+    ('com.example.mail', 'Fixture Mail'),
+    ('com.example.team', 'Fixture Team'),
+    ('com.example.social', 'Fixture Social'),
+    ('com.example.bank', 'Fixture Bank'),
+    ('com.example.food', 'Fixture Food'),
+    ('com.example.system', 'Fixture System'),
   ];
 
-  static Future<void> insertSystemCategories(Database db) async {
-    const seeds = <(String, int)>[
-      ('Messages', 0xFF3E63DD),
-      ('Social', 0xFF8E4EC6),
-      ('Finance', 0xFF2E9E5B),
-      ('Promotions', 0xFFE5A32A),
-      ('System', 0xFF8B8D98),
-    ];
-    final batch = db.batch();
-    for (final seed in seeds) {
-      batch.insert('categories', {
-        'name': seed.$1,
-        'color_value': seed.$2,
-        'is_system': 1,
-      });
-    }
-    await batch.commit(noResult: true);
-  }
-
-  /// True when the database has never been seeded.
-  static Future<bool> isEmpty(Database db) async {
+  /// True when no fixture data is present.
+  static Future<bool> isAbsent(Database db) async {
     final rows = await db.rawQuery(
-      'SELECT COUNT(*) AS c FROM notification_items',
+      "SELECT COUNT(*) AS c FROM notification_items "
+      "WHERE package_name LIKE 'com.example.%'",
     );
     return ((rows.first['c'] as int?) ?? 0) == 0;
   }
 
-  /// Inserts the demo apps, notifications and rules.
+  /// Removes every fixture row, leaving real captured notifications alone.
+  static Future<int> clear(Database db) async {
+    await db.delete('app_sources', where: "package_name LIKE 'com.example.%'");
+    await db.delete('rules', where: "match_value LIKE 'com.example.%'");
+    return db.delete(
+      'notification_items',
+      where: "package_name LIKE 'com.example.%'",
+    );
+  }
+
+  /// Inserts the fixture dataset. Returns the number of notifications added.
   ///
-  /// Safe to call repeatedly: it returns immediately when data already exists.
-  static Future<void> insert(Database db) async {
-    if (!await SeedData.isEmpty(db)) return;
+  /// Calling it twice is a no-op, so the dataset stays deterministic.
+  static Future<int> generate(Database db) async {
+    if (!await isAbsent(db)) return 0;
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
     final appBatch = db.batch();
-    for (final app in apps) {
+    for (final app in fixtureApps) {
       appBatch.insert('app_sources', {
         'package_name': app.$1,
         'app_label': app.$2,
-        'is_muted': app.$1 == 'com.android.systemui' ? 1 : 0,
+        'is_muted': app.$1 == 'com.example.system' ? 1 : 0,
         'first_seen_at': today
             .subtract(const Duration(days: 45))
             .millisecondsSinceEpoch,
@@ -79,6 +78,7 @@ class SeedData {
             )['id']
             as int;
 
+    var inserted = 0;
     final batch = db.batch();
 
     void add({
@@ -92,6 +92,7 @@ class SeedData {
       bool isArchived = false,
       DateTime? snoozeUntil,
     }) {
+      inserted++;
       batch.insert('notification_items', {
         'package_name': package,
         'title': title,
@@ -102,13 +103,13 @@ class SeedData {
         'is_read': isRead ? 1 : 0,
         'is_archived': isArchived ? 1 : 0,
         'snooze_until': snoozeUntil?.millisecondsSinceEpoch,
-        'native_key': '0|$package|${postedAt.millisecondsSinceEpoch}',
+        'native_key': 'fixture|$package|${postedAt.millisecondsSinceEpoch}',
       });
     }
 
-    // --- Today -------------------------------------------------------------
+    // --- Today --------------------------------------------------------------
     add(
-      package: 'com.whatsapp',
+      package: 'com.example.chat',
       title: 'Priya Sharma',
       body: 'Are we still meeting at 6? Let me know.',
       postedAt: today.add(const Duration(hours: 9, minutes: 12)),
@@ -116,14 +117,14 @@ class SeedData {
       priority: NotificationPriority.high,
     );
     add(
-      package: 'com.whatsapp',
+      package: 'com.example.chat',
       title: 'Design Team (4 messages)',
-      body: 'Rohan: pushed the updated inbox mockups to Figma',
+      body: 'Rohan: pushed the updated inbox mockups to the shared folder',
       postedAt: today.add(const Duration(hours: 9, minutes: 40)),
       category: 'Messages',
     );
     add(
-      package: 'com.hdfcbank.payzapp',
+      package: 'com.example.bank',
       title: 'Payment received',
       body: 'Your UPI transaction of INR 2,400 was credited successfully.',
       postedAt: today.add(const Duration(hours: 10, minutes: 5)),
@@ -131,7 +132,7 @@ class SeedData {
       priority: NotificationPriority.high,
     );
     add(
-      package: 'com.google.android.gm',
+      package: 'com.example.mail',
       title: 'Invoice for November',
       body: 'Your subscription receipt is attached. Amount: INR 499.',
       postedAt: today.add(const Duration(hours: 10, minutes: 30)),
@@ -139,15 +140,15 @@ class SeedData {
       isRead: true,
     );
     add(
-      package: 'com.slack',
+      package: 'com.example.team',
       title: 'mentioned you in #release',
-      body: 'Aman: can you review the signalbox changelog before the cut?',
+      body: 'Aman: can you review the changelog before the cut?',
       postedAt: today.add(const Duration(hours: 11, minutes: 15)),
       category: 'Messages',
       priority: NotificationPriority.high,
     );
     add(
-      package: 'in.swiggy.android',
+      package: 'com.example.food',
       title: 'Flat 60% off on your next order',
       body: 'Use code SIGNAL60. Valid until midnight.',
       postedAt: today.add(const Duration(hours: 12)),
@@ -155,7 +156,7 @@ class SeedData {
       priority: NotificationPriority.low,
     );
     add(
-      package: 'com.instagram.android',
+      package: 'com.example.social',
       title: 'nikhil started following you',
       body: 'Tap to see their profile.',
       postedAt: today.add(const Duration(hours: 13, minutes: 20)),
@@ -164,37 +165,35 @@ class SeedData {
       isRead: true,
     );
 
-    // Two notifications with an identical timestamp: used to reproduce the
-    // unstable-sort issue.
+    // Identical timestamps: used to reproduce the unstable-sort issue.
     final tie = today.add(const Duration(hours: 14));
     add(
-      package: 'com.slack',
+      package: 'com.example.team',
       title: 'Build passed',
       body: 'signalbox/main finished in 2m 14s.',
       postedAt: tie,
       category: 'System',
     );
     add(
-      package: 'com.google.android.gm',
+      package: 'com.example.mail',
       title: 'Weekly report is ready',
       body: 'Your notification digest for this week is available.',
       postedAt: tie,
       category: 'System',
     );
 
-    // A notification snoozed into the future: used to reproduce the snooze
-    // boundary issue.
+    // Snoozed into the future: used to reproduce the snooze boundary issue.
     add(
-      package: 'in.swiggy.android',
+      package: 'com.example.food',
       title: 'Rate your last order',
-      body: 'How was the food from Burma Burma?',
+      body: 'How was your meal?',
       postedAt: today.add(const Duration(hours: 15)),
       category: 'Promotions',
       priority: NotificationPriority.low,
       snoozeUntil: now.add(const Duration(hours: 3)),
     );
 
-    // --- Yesterday and the past month -------------------------------------
+    // --- The past month -----------------------------------------------------
     const bodies = <String>[
       'Tap to open the conversation.',
       'You have a new update waiting.',
@@ -226,9 +225,9 @@ class SeedData {
     for (var day = 1; day <= 29; day++) {
       final perDay = 1 + (day % 3);
       for (var n = 0; n < perDay; n++) {
-        final idx = (day + n) % apps.length;
+        final idx = (day + n) % fixtureApps.length;
         add(
-          package: apps[idx].$1,
+          package: fixtureApps[idx].$1,
           title: titles[idx],
           body: bodies[idx],
           postedAt: today
@@ -244,22 +243,23 @@ class SeedData {
 
     await batch.commit(noResult: true);
 
-    // --- Rules -------------------------------------------------------------
+    // Two enabled rules target the same package on purpose: that is what makes
+    // the application-totals issue reproducible.
     final ruleBatch = db.batch();
     void addRule({
       required String name,
-      required RuleMatchField field,
+      required int field,
       required String value,
-      required RuleAction action,
+      required int action,
       required String actionValue,
       bool enabled = true,
       int order = 0,
     }) {
       ruleBatch.insert('rules', {
         'name': name,
-        'match_field': field.index,
+        'match_field': field,
         'match_value': value,
-        'action_type': action.index,
+        'action_type': action,
         'action_value': actionValue,
         'is_enabled': enabled ? 1 : 0,
         'sort_order': order,
@@ -268,45 +268,47 @@ class SeedData {
 
     addRule(
       name: 'Bank alerts are high priority',
-      field: RuleMatchField.packageName,
-      value: 'com.hdfcbank.payzapp',
-      action: RuleAction.setPriority,
+      field: 0,
+      value: 'com.example.bank',
+      action: 0,
       actionValue: '${NotificationPriority.high.index}',
       order: 0,
     );
     addRule(
       name: 'Offers are low priority',
-      field: RuleMatchField.title,
+      field: 1,
       value: 'off on your next order',
-      action: RuleAction.setPriority,
+      action: 0,
       actionValue: '${NotificationPriority.low.index}',
       order: 1,
     );
     addRule(
-      name: 'WhatsApp goes to Messages',
-      field: RuleMatchField.packageName,
-      value: 'com.whatsapp',
-      action: RuleAction.assignCategory,
+      name: 'Chat goes to Messages',
+      field: 0,
+      value: 'com.example.chat',
+      action: 1,
       actionValue: 'Messages',
       order: 2,
     );
     addRule(
-      name: 'WhatsApp is high priority',
-      field: RuleMatchField.packageName,
-      value: 'com.whatsapp',
-      action: RuleAction.setPriority,
+      name: 'Chat is high priority',
+      field: 0,
+      value: 'com.example.chat',
+      action: 0,
       actionValue: '${NotificationPriority.high.index}',
       order: 3,
     );
     addRule(
-      name: 'Mute system UI',
-      field: RuleMatchField.packageName,
-      value: 'com.android.systemui',
-      action: RuleAction.mute,
+      name: 'Mute fixture system app',
+      field: 0,
+      value: 'com.example.system',
+      action: 2,
       actionValue: '',
       enabled: false,
       order: 4,
     );
     await ruleBatch.commit(noResult: true);
+
+    return inserted;
   }
 }

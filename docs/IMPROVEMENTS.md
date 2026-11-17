@@ -24,7 +24,7 @@ or an audit first, so that a reviewer can see what the change actually bought.
 
 ### Problem
 
-`notification_items` has no secondary index. Every inbox page sorts the whole table on `posted_at`, every per-app view scans it on `package_name`, and the statistics aggregates scan it repeatedly. This is fine with the seeded 60 rows and poor with months of real capture.
+`notification_items` has no secondary index. Every inbox page sorts the whole table on `posted_at`, every per-app view scans it on `package_name`, and the statistics aggregates scan it repeatedly. This is fine with the 60 fixture rows and poor with months of real capture.
 
 ### Requirements
 
@@ -70,7 +70,7 @@ or an audit first, so that a reviewer can see what the change actually bought.
 ### Acceptance criteria
 
 - [ ] Marking one notification read rebuilds that row and not the rest of the list, demonstrated by a rebuild count or timeline in the PR.
-- [ ] Scrolling the seeded inbox holds a steady frame rate in profile mode, with before/after numbers.
+- [ ] Scrolling the fixture inbox holds a steady frame rate in profile mode, with before/after numbers.
 - [ ] No behaviour changes: every existing inbox test still passes unmodified.
 - [ ] The row widget stays `const`-constructible where its inputs allow it.
 

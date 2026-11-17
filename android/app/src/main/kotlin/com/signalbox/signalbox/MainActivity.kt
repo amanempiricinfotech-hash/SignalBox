@@ -28,6 +28,24 @@ class MainActivity : FlutterActivity() {
                     }
                     "isListenerConnected" ->
                         result.success(NotificationStreamHandler.isListenerConnected())
+                    "getInstalledApps" ->
+                        result.success(InstalledAppsReader.installedApps(this))
+                    "getAppLabel" -> {
+                        val pkg = call.argument<String>("packageName")
+                        if (pkg == null) {
+                            result.error("ARG", "packageName is required", null)
+                        } else {
+                            result.success(InstalledAppsReader.appLabel(this, pkg))
+                        }
+                    }
+                    "getAppIcon" -> {
+                        val pkg = call.argument<String>("packageName")
+                        if (pkg == null) {
+                            result.error("ARG", "packageName is required", null)
+                        } else {
+                            result.success(InstalledAppsReader.appIcon(this, pkg))
+                        }
+                    }
                     else -> result.notImplemented()
                 }
             }

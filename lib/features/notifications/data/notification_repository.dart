@@ -90,6 +90,22 @@ class NotificationRepository {
     return (rows.first['c'] as int?) ?? 0;
   }
 
+  /// Whether this notification has already been captured.
+  ///
+  /// Android re-posts a notification under the same key when it is updated, so
+  /// the key alone is not unique; the key plus the post time is.
+  Future<bool> existsByNativeKey(String? nativeKey, DateTime postedAt) async {
+    if (nativeKey == null) return false;
+    final rows = await _db.query(
+      _table,
+      columns: ['id'],
+      where: 'native_key = ? AND posted_at = ?',
+      whereArgs: [nativeKey, postedAt.millisecondsSinceEpoch],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
+  }
+
   Future<int> insert(NotificationItem item) =>
       _db.insert(_table, item.toMap()..remove('id'));
 

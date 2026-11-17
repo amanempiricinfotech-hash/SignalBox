@@ -54,11 +54,11 @@ class AccessBanner extends ConsumerWidget {
                   Text(
                     supported
                         ? 'SignalBox needs notification access to capture '
-                              'notifications from your other apps. Until then '
-                              'you are looking at sample data.'
+                              'notifications from your other apps. Until you '
+                              'grant it, your inbox stays empty.'
                         : 'Only Android exposes other applications\' '
-                              'notifications. On this platform SignalBox runs '
-                              'against sample data so the UI stays testable.',
+                              'notifications, so nothing can be captured on '
+                              'this platform.',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

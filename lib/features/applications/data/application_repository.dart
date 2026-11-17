@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../../shared/models/app_source.dart';
+import '../../../shared/models/installed_app.dart';
 import '../domain/app_summary.dart';
 
 /// Read and write access to `app_sources`, plus the per-application rollups
@@ -42,6 +43,48 @@ class ApplicationRepository {
       'is_muted': 0,
       'first_seen_at': DateTime.now().millisecondsSinceEpoch,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  /// Registers every application installed on the device.
+  ///
+  /// Labels are refreshed (an app can be renamed by an update) while the mute
+  /// flag and the first-seen timestamp are preserved, because those are the
+  /// user's own state.
+  ///
+  /// Returns the number of applications that were new.
+  Future<int> syncInstalled(List<InstalledApp> apps) async {
+    if (apps.isEmpty) return 0;
+
+    final known = (await _db.query(
+      _table,
+      columns: ['package_name'],
+    )).map((row) => row['package_name'] as String).toSet();
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final batch = _db.batch();
+    var added = 0;
+
+    for (final app in apps) {
+      if (known.contains(app.packageName)) {
+        batch.update(
+          _table,
+          {'app_label': app.appLabel},
+          where: 'package_name = ?',
+          whereArgs: [app.packageName],
+        );
+      } else {
+        added++;
+        batch.insert(_table, {
+          'package_name': app.packageName,
+          'app_label': app.appLabel,
+          'is_muted': 0,
+          'first_seen_at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+    }
+
+    await batch.commit(noResult: true);
+    return added;
   }
 
   Future<void> setMuted(String packageName, bool isMuted) async {

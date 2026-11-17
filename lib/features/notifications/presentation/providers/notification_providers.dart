@@ -2,8 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/database/database_provider.dart';
+import '../../../../core/services/notification_access_provider.dart';
 import '../../../../shared/models/notification_item.dart';
 import '../../../../shared/models/notification_priority.dart';
+import '../../../applications/presentation/providers/application_providers.dart';
+import '../../data/notification_ingest_service.dart';
 import '../../data/notification_repository.dart';
 import '../../domain/notification_filter.dart';
 
@@ -225,3 +228,25 @@ final notificationsForPackageProvider =
     FutureProvider.family<List<NotificationItem>, String>((ref, packageName) {
       return ref.watch(notificationRepositoryProvider).forPackage(packageName);
     });
+
+/// Runs the capture pipeline for as long as the app is alive.
+///
+/// Watch this once, high in the widget tree, to start storing notifications as
+/// the Android listener delivers them.
+final notificationIngestProvider = Provider<NotificationIngestService>((ref) {
+  final service = NotificationIngestService(
+    access: ref.watch(notificationAccessServiceProvider),
+    notifications: ref.watch(notificationRepositoryProvider),
+    applications: ref.watch(applicationRepositoryProvider),
+    onBatchStored: () {
+      ref.invalidate(inboxProvider);
+      ref.invalidate(unreadCountProvider);
+      ref.invalidate(filteredCountProvider);
+      ref.invalidate(appSummariesProvider);
+      ref.invalidate(appLabelsProvider);
+    },
+  );
+  service.start();
+  ref.onDispose(service.stop);
+  return service;
+});

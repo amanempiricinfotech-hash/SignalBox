@@ -16,7 +16,9 @@ void initTestDatabase() {
 
 /// A fresh in-memory database with the production schema.
 ///
-/// Pass `seed: true` to also insert the demo data from `SeedData`.
-Future<Database> openTestDatabase({bool seed = false}) {
-  return AppDatabase.instance.openInMemory(seed: seed);
+/// Pass `fixtures: true` to also insert the developer fixtures. Prefer
+/// inserting exactly the rows a test needs: it reads better in review and does
+/// not break when the fixtures change.
+Future<Database> openTestDatabase({bool fixtures = false}) {
+  return AppDatabase.instance.openInMemory(fixtures: fixtures);
 }

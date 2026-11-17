@@ -11,11 +11,11 @@ lib/
   app.dart                  MaterialApp.router + theme wiring
   core/
     constants/              AppConstants, PrefKeys
-    database/               schema, connection, seed data, databaseProvider
+    database/               schema, connection, default categories, databaseProvider
     errors/                 Failure hierarchy
     extensions/             DateTimeX, StringX
     router/                 go_router routes and the bottom-navigation shell
-    services/              platform channels (notification access), preferences
+    services/               platform channels (notification access, installed apps), preferences
     theme/                  light and dark Material 3 themes
   features/<feature>/
     data/                   repositories: every SQL statement lives here
@@ -132,14 +132,40 @@ Only Android can read other applications' notifications.
 `NotificationAccessService.isSupported` is false everywhere else, the stream is
 empty, and the dashboard banner says so rather than implying the feature exists.
 
-## Seed data
+## No sample data
 
-A fresh install has nothing to show, and most contributors work without granting
-notification access. `SeedData.insert` writes a deterministic demo inbox on first
-run: seven applications, roughly sixty notifications across the last thirty days,
-five system categories and five rules.
+SignalBox ships with **no** sample notifications and **no** built-in list of
+applications. A fresh install is empty and stays empty until the user grants
+notification access.
 
-It is deterministic on purpose. The reproduction steps in `docs/SEEDED_BUGS.md`
-refer to specific seeded rows, so they work the same on every machine. `insert`
-returns immediately when the table is not empty, so it never overwrites real
-captured data.
+Two things fill it:
+
+- **Captured notifications.** `NotificationIngestService` subscribes to the
+  platform stream, registers the originating application and stores the row.
+  It de-duplicates on `(native_key, posted_at)`, because Android re-posts a
+  notification under the same key when it is updated.
+- **Installed applications.** `InstalledAppsService` reads the package manager
+  through the same method channel. `ApplicationRepository.syncInstalled`
+  registers them, refreshing labels while preserving the user's mute flags.
+
+The only rows written at database creation are the five system categories in
+`DefaultCategories`. Those are application defaults, not sample data: a
+notification cannot be filed without a bucket to file it in.
+
+### Package visibility
+
+Android 11 filters which packages an app can see. Rather than request the
+restricted `QUERY_ALL_PACKAGES` permission, the manifest declares a `<queries>`
+entry for the launcher intent. That covers every app a user would recognise and
+needs no Play Store justification.
+
+### Developer fixtures
+
+`DebugSampleData` holds a fictional dataset (`com.example.*`, "Fixture Chat"
+and friends). It is only reachable from **Settings > Developer** behind
+`kDebugMode`, and never runs on its own.
+
+It exists because the issues in `docs/SEEDED_BUGS.md` need reproduction steps
+that give the same result on every machine, and "whatever happens to be in your
+own notification shade" is not repeatable. `DebugSampleData.clear` removes only
+the fixture rows and leaves real captured notifications alone.

@@ -42,9 +42,9 @@ matters: `flutter_test` drives widget tests on a fake async clock, and the
 default isolate-backed factory never completes under it, which shows up as
 `pumpAndSettle timed out` together with a `database has been locked` warning.
 
-Pass `seed: true` to `openTestDatabase` for the demo data. Prefer inserting
-exactly the rows a test needs: it is clearer in review and does not break when
-the seed changes.
+Pass `fixtures: true` to `openTestDatabase` for the developer fixtures. Prefer
+inserting exactly the rows a test needs: it is clearer in review and does not
+break when the fixtures change.
 
 ## Widget tests
 
@@ -76,7 +76,8 @@ Use `SharedPreferences.setMockInitialValues({})` in `setUp` before
 | Priority enum | `test/core/notification_priority_test.dart` | 4 |
 | Notification filter | `test/features/notifications/notification_filter_test.dart` | 7 |
 | Notification repository | `test/features/notifications/notification_repository_test.dart` | 24 |
-| Application repository | `test/features/applications/application_repository_test.dart` | 10 |
+| Notification ingestion | `test/features/notifications/notification_ingest_service_test.dart` | 17 |
+| Application repository (incl. device sync) | `test/features/applications/application_repository_test.dart` | 16 |
 | Category repository | `test/features/categories/category_repository_test.dart` | 10 |
 | Rule repository | `test/features/rules/rule_repository_test.dart` | 9 |
 | Statistics repository | `test/features/statistics/statistics_repository_test.dart` | 10 |
@@ -87,7 +88,7 @@ Use `SharedPreferences.setMockInitialValues({})` in `setUp` before
 | Bar chart | `test/widgets/simple_bar_chart_test.dart` | 3 |
 | Breakdown bar | `test/widgets/breakdown_bar_test.dart` | 4 |
 
-**124 tests, all passing.**
+**147 tests, all passing.**
 
 ## A deliberate gap
 

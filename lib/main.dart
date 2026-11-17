@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart';
 import 'core/database/app_database.dart';
 import 'core/database/database_provider.dart';
-import 'core/database/seed_data.dart';
 import 'core/services/preferences_provider.dart';
 
 Future<void> main() async {
@@ -13,8 +12,10 @@ Future<void> main() async {
 
   // Open the database and load preferences before the first frame so that the
   // rest of the app can depend on them synchronously.
+  //
+  // Nothing is written here. SignalBox starts empty and fills up with the
+  // user's own notifications once they grant notification access.
   final database = await AppDatabase.instance.database;
-  await SeedData.insert(database);
   final preferences = await SharedPreferences.getInstance();
 
   runApp(

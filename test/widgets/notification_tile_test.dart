@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:signalbox/features/notifications/presentation/widgets/notification_tile.dart';
 import 'package:signalbox/shared/models/notification_category.dart';
@@ -35,14 +36,16 @@ void main() {
     VoidCallback? onTap,
   }) {
     return tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: NotificationTile(
-            item: item,
-            appLabel: 'HDFC Bank',
-            category: category,
-            hidePreview: hidePreview,
-            onTap: onTap,
+      ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: NotificationTile(
+              item: item,
+              appLabel: 'HDFC Bank',
+              category: category,
+              hidePreview: hidePreview,
+              onTap: onTap,
+            ),
           ),
         ),
       ),

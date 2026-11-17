@@ -52,9 +52,10 @@ The inbox search box only matches the notification title. Any query that appears
 
 ### Steps to reproduce
 
-1. Launch the app and open the **Inbox** tab.
-2. Confirm that the seeded notification titled `Payment received` is visible and that its body reads `Your UPI transaction of INR 2,400 was credited successfully.`
-3. Type `UPI` into the search field.
+1. In a **debug build**, open **Settings > Developer > Load issue fixtures**. SignalBox ships no sample data - it shows your own captured notifications - so the fixtures give every contributor the same starting point.
+2. Launch the app and open the **Inbox** tab.
+3. Confirm that the fixture notification titled `Payment received` is visible and that its body reads `Your UPI transaction of INR 2,400 was credited successfully.`
+4. Type `UPI` into the search field.
 
 ### Expected behaviour
 
@@ -99,10 +100,11 @@ The upper bound of a date range is compared against midnight at the *start* of t
 
 ### Steps to reproduce
 
-1. Open the **Inbox** tab and tap the filter icon.
-2. Under **Date range**, select a range that starts yesterday and ends today, then tap **Show results**.
-3. Observe which notifications are listed.
-4. Open the **Stats** tab with `Last 7 days` selected and look at the `Volume per day` chart.
+1. In a **debug build**, open **Settings > Developer > Load issue fixtures**. SignalBox ships no sample data - it shows your own captured notifications - so the fixtures give every contributor the same starting point.
+2. Open the **Inbox** tab and tap the filter icon.
+3. Under **Date range**, select a range that starts yesterday and ends today, then tap **Show results**.
+4. Observe which notifications are listed.
+5. Open the **Stats** tab with `Last 7 days` selected and look at the `Volume per day` chart.
 
 ### Expected behaviour
 
@@ -147,9 +149,10 @@ Compare the end bound against `endOfDay`, not `startOfDay`. `DateTimeX` already 
 
 ### Steps to reproduce
 
-1. Open the **Apps** tab.
-2. Note the count shown for **WhatsApp** (the seed data ships two enabled rules that both target `com.whatsapp`).
-3. Tap WhatsApp to open its detail screen and count the notifications actually listed.
+1. In a **debug build**, open **Settings > Developer > Load issue fixtures**. SignalBox ships no sample data - it shows your own captured notifications - so the fixtures give every contributor the same starting point.
+2. Open the **Apps** tab.
+3. Note the count shown for **Fixture Chat** (the fixtures ship two enabled rules that both target `com.example.chat`).
+4. Tap Fixture Chat to open its detail screen and count the notifications actually listed.
 
 ### Expected behaviour
 
@@ -193,9 +196,10 @@ Either count distinct notification ids, or compute the rule count in a separate 
 
 ### Steps to reproduce
 
-1. Open the **Dashboard** tab and note the number on the **Unread** card.
-2. Switch to the **Inbox** tab, long-press an unread notification and choose **Delete**.
-3. Go back to the **Dashboard** tab without pulling to refresh.
+1. In a **debug build**, open **Settings > Developer > Load issue fixtures**. SignalBox ships no sample data - it shows your own captured notifications - so the fixtures give every contributor the same starting point.
+2. Open the **Dashboard** tab and note the number on the **Unread** card.
+3. Switch to the **Inbox** tab, long-press an unread notification and choose **Delete**.
+4. Go back to the **Dashboard** tab without pulling to refresh.
 
 ### Expected behaviour
 
@@ -239,10 +243,11 @@ The snooze clause compares `snooze_until` against the *end of today* instead of 
 
 ### Steps to reproduce
 
-1. Open the **Inbox** tab.
-2. Long-press any notification, choose **Snooze**, then choose **15 minutes**.
-3. The row disappears from the list because the notifier removes it locally.
-4. Pull down to refresh the inbox, or switch tabs and come back.
+1. In a **debug build**, open **Settings > Developer > Load issue fixtures**. SignalBox ships no sample data - it shows your own captured notifications - so the fixtures give every contributor the same starting point.
+2. Open the **Inbox** tab.
+3. Long-press any notification, choose **Snooze**, then choose **15 minutes**.
+4. The row disappears from the list because the notifier removes it locally.
+5. Pull down to refresh the inbox, or switch tabs and come back.
 
 ### Expected behaviour
 
@@ -287,8 +292,9 @@ The inbox only renders its empty state when the search query is empty. A search 
 
 ### Steps to reproduce
 
-1. Open the **Inbox** tab.
-2. Type `zzzzz` into the search field.
+1. In a **debug build**, open **Settings > Developer > Load issue fixtures**. SignalBox ships no sample data - it shows your own captured notifications - so the fixtures give every contributor the same starting point.
+2. Open the **Inbox** tab.
+3. Type `zzzzz` into the search field.
 
 ### Expected behaviour
 
@@ -332,10 +338,11 @@ See the `items.isEmpty && searchQuery.isEmpty` condition in `_InboxList.build`.
 
 ### Steps to reproduce
 
-1. Open the **Inbox** tab (the seed data contains more than 60 notifications, and the page size is 20).
-2. Note the 20th and 21st notifications by scrolling slowly.
-3. Keep scrolling so the next page loads.
-4. Compare the list against `SELECT title, posted_at FROM notification_items ORDER BY posted_at DESC` or against the per-app lists on the Apps tab.
+1. In a **debug build**, open **Settings > Developer > Load issue fixtures**. SignalBox ships no sample data - it shows your own captured notifications - so the fixtures give every contributor the same starting point.
+2. Open the **Inbox** tab (the fixtures contain more than 60 notifications, and the page size is 20).
+3. Note the 20th and 21st notifications by scrolling slowly.
+4. Keep scrolling so the next page loads.
+5. Compare the list against `SELECT title, posted_at FROM notification_items ORDER BY posted_at DESC` or against the per-app lists on the Apps tab.
 
 ### Expected behaviour
 
@@ -379,9 +386,10 @@ A SQL `OFFSET` is the number of rows to skip, which is exactly the number of row
 
 ### Steps to reproduce
 
-1. Open the **Stats** tab.
-2. Select `Last 7 days`, then pick a single application such as **Slack** from the second chip row.
-3. Compare the **Total notifications** card with the sum of the bars in **Volume per day** and with the per-application breakdown.
+1. In a **debug build**, open **Settings > Developer > Load issue fixtures**. SignalBox ships no sample data - it shows your own captured notifications - so the fixtures give every contributor the same starting point.
+2. Open the **Stats** tab.
+3. Select `Last 7 days`, then pick a single application such as **Fixture Team** from the second chip row.
+4. Compare the **Total notifications** card with the sum of the bars in **Volume per day** and with the per-application breakdown.
 
 ### Expected behaviour
 
@@ -425,10 +433,11 @@ The filtered clause is already built in `load()` as `where`/`args`; the total qu
 
 ### Steps to reproduce
 
-1. The seed data contains two notifications posted at exactly 14:00 today: `Build passed` (Slack) and `Weekly report is ready` (Gmail).
-2. Open the **Inbox** tab and note which of the two is listed first.
-3. Open the **Apps** tab, open **Slack**, then open **Gmail**, and compare their relative order against the inbox.
-4. Pull to refresh the inbox a few times and watch the two rows.
+1. In a **debug build**, open **Settings > Developer > Load issue fixtures**. SignalBox ships no sample data - it shows your own captured notifications - so the fixtures give every contributor the same starting point.
+2. The fixtures contain two notifications posted at exactly 14:00 today: `Build passed` (Fixture Team) and `Weekly report is ready` (Fixture Mail).
+3. Open the **Inbox** tab and note which of the two is listed first.
+4. Open the **Apps** tab, open **Fixture Team**, then open **Fixture Mail**, and compare their relative order against the inbox.
+5. Pull to refresh the inbox a few times and watch the two rows.
 
 ### Expected behaviour
 
@@ -472,10 +481,11 @@ Put the ordering in one constant used by every query in the repository.
 
 ### Steps to reproduce
 
-1. Open the **Settings** tab.
-2. Under **Data**, tap **Keep history for** and choose `90 days`. The subtitle updates to `90 days`.
-3. Fully restart the app (stop and relaunch, not hot reload).
-4. Open **Settings** again.
+1. In a **debug build**, open **Settings > Developer > Load issue fixtures**. SignalBox ships no sample data - it shows your own captured notifications - so the fixtures give every contributor the same starting point.
+2. Open the **Settings** tab.
+3. Under **Data**, tap **Keep history for** and choose `90 days`. The subtitle updates to `90 days`.
+4. Fully restart the app (stop and relaunch, not hot reload).
+5. Open **Settings** again.
 
 ### Expected behaviour
 
@@ -520,16 +530,17 @@ It has reverted to `30 days`. Every other setting on the screen is restored corr
 
 ### Steps to reproduce
 
-1. Open the **Apps** tab and turn the switch **off** for **WhatsApp** (off means muted).
-2. Go to the **Inbox** tab and pull to refresh.
+1. In a **debug build**, open **Settings > Developer > Load issue fixtures**. SignalBox ships no sample data - it shows your own captured notifications - so the fixtures give every contributor the same starting point.
+2. Open the **Apps** tab and turn the switch **off** for **Fixture Chat** (off means muted).
+3. Go to the **Inbox** tab and pull to refresh.
 
 ### Expected behaviour
 
-WhatsApp notifications are no longer listed in the inbox, while remaining visible on the WhatsApp detail screen and counted in Statistics.
+Fixture Chat notifications are no longer listed in the inbox, while remaining visible on the Fixture Chat detail screen and counted in Statistics.
 
 ### Actual behaviour
 
-WhatsApp notifications are still in the inbox. Only the mute icon on the Apps row changed.
+Fixture Chat notifications are still in the inbox. Only the mute icon on the Apps row changed.
 
 ### Acceptance criteria
 
@@ -566,14 +577,15 @@ The inbox query will need to consider `app_sources`. Keep one source of truth fo
 
 ### Steps to reproduce
 
-1. Open the **Inbox** tab and confirm several apps have unread notifications.
-2. Tap the filter icon, select only **Slack** under **Application**, and tap **Show results**.
-3. Tap the double-tick **Mark all as read** button in the app bar.
-4. Clear the filter.
+1. In a **debug build**, open **Settings > Developer > Load issue fixtures**. SignalBox ships no sample data - it shows your own captured notifications - so the fixtures give every contributor the same starting point.
+2. Open the **Inbox** tab and confirm several apps have unread notifications.
+3. Tap the filter icon, select only **Fixture Team** under **Application**, and tap **Show results**.
+4. Tap the double-tick **Mark all as read** button in the app bar.
+5. Clear the filter.
 
 ### Expected behaviour
 
-Only the Slack notifications that matched the filter are marked read; everything else stays unread.
+Only the Fixture Team notifications that matched the filter are marked read; everything else stays unread.
 
 ### Actual behaviour
 

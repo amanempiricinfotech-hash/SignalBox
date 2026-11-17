@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_constants.dart';
+import '../../../core/database/database_provider.dart';
+import '../../../core/database/debug_sample_data.dart';
 import '../../../core/router/app_router.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../applications/presentation/providers/application_providers.dart';
@@ -67,6 +70,15 @@ class SettingsPage extends ConsumerWidget {
                   subtitle: const Text('Automate priority and categories'),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => context.push(Routes.rules),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.sync_rounded),
+                  title: const Text('Rescan installed applications'),
+                  subtitle: const Text(
+                    'Refreshes the app list from this device',
+                  ),
+                  onTap: () => _rescanApps(context, ref),
                 ),
                 const Divider(height: 1),
                 ListTile(
@@ -145,6 +157,34 @@ class SettingsPage extends ConsumerWidget {
               ],
             ),
           ),
+          if (kDebugMode) ...[
+            const SectionHeader(title: 'Developer'),
+            Card(
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.science_outlined),
+                    title: const Text('Load issue fixtures'),
+                    subtitle: const Text(
+                      'Inserts the fictional dataset the catalogued issues are '
+                      'reproduced against. Debug builds only.',
+                    ),
+                    onTap: () => _loadFixtures(context, ref),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.cleaning_services_outlined),
+                    title: const Text('Remove issue fixtures'),
+                    subtitle: const Text(
+                      'Deletes only the fixture rows. Captured notifications '
+                      'are left alone.',
+                    ),
+                    onTap: () => _clearFixtures(context, ref),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SectionHeader(title: 'About'),
           Card(
             child: Column(
@@ -202,6 +242,59 @@ class SettingsPage extends ConsumerWidget {
     if (selected != null) {
       await ref.read(settingsProvider.notifier).setRetentionDays(selected);
     }
+  }
+
+  Future<void> _rescanApps(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final added = await ref.read(appSyncControllerProvider).syncFromDevice();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            added == 0
+                ? 'Application list is up to date'
+                : 'Found $added new application${added == 1 ? '' : 's'}',
+          ),
+        ),
+      );
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not read apps: $error')),
+      );
+    }
+  }
+
+  Future<void> _loadFixtures(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final inserted = await DebugSampleData.generate(ref.read(databaseProvider));
+    _refreshEverything(ref);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          inserted == 0
+              ? 'Fixtures are already loaded'
+              : 'Inserted $inserted fixture notifications',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _clearFixtures(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final removed = await DebugSampleData.clear(ref.read(databaseProvider));
+    _refreshEverything(ref);
+    messenger.showSnackBar(
+      SnackBar(content: Text('Removed $removed fixture notifications')),
+    );
+  }
+
+  void _refreshEverything(WidgetRef ref) {
+    ref.invalidate(inboxProvider);
+    ref.invalidate(unreadCountProvider);
+    ref.invalidate(appSummariesProvider);
+    ref.invalidate(appLabelsProvider);
+    ref.invalidate(statisticsProvider);
+    ref.invalidate(snoozedNotificationsProvider);
   }
 
   void _notImplemented(BuildContext context, String feature) {

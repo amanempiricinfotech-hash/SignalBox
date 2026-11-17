@@ -3,7 +3,8 @@ import 'package:sqflite/sqflite.dart';
 
 import '../constants/app_constants.dart';
 import '../errors/failures.dart';
-import 'seed_data.dart';
+import 'debug_sample_data.dart';
+import 'default_categories.dart';
 
 /// Owns the SQLite connection and the schema.
 ///
@@ -46,14 +47,18 @@ class AppDatabase {
   }
 
   /// Opens an in-memory database. Used by tests.
-  Future<Database> openInMemory({bool seed = false}) async {
+  ///
+  /// `fixtures: true` also inserts the developer fixtures from
+  /// [DebugSampleData]. Most tests should insert exactly the rows they need
+  /// instead.
+  Future<Database> openInMemory({bool fixtures = false}) async {
     return openDatabase(
       inMemoryDatabasePath,
       version: schemaVersion,
       onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
       onCreate: (db, version) async {
         await _onCreate(db, version);
-        if (seed) await SeedData.insert(db);
+        if (fixtures) await DebugSampleData.generate(db);
       },
       onUpgrade: _onUpgrade,
     );
@@ -114,7 +119,7 @@ class AppDatabase {
     ''');
 
     await batch.commit(noResult: true);
-    await SeedData.insertSystemCategories(db);
+    await DefaultCategories.insert(db);
   }
 
   /// Schema upgrades. Nothing to do at version 1.

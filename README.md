@@ -42,7 +42,8 @@ Working today:
 
 - **Notification inbox** with date grouping, swipe-to-archive and per-item actions
 - **Full history** kept locally in SQLite
-- **Application-wise grouping** with per-app totals, unread counts and last activity
+- **Real device applications**: the app list is read from the Android package manager, with launcher icons - nothing is hard-coded
+- **Application-wise grouping** with per-app totals, unread counts and last activity, plus an *All apps* view for muting an app before it ever notifies
 - **Search and filtering** by application, priority, category, read state and date range
 - **Priority categorisation** (high / normal / low), editable per notification
 - **Categories**: five system buckets (Messages, Social, Finance, Promotions, System)
@@ -50,7 +51,7 @@ Working today:
 - **Statistics**: volume per day, breakdowns by application, category and priority, daily average, busiest day
 - **Snooze and reminders** with presets and a dedicated Snoozed screen
 - **Privacy settings**: preview masking, retention window, delete-all
-- **Android notification capture** through a Kotlin `NotificationListenerService`
+- **Android notification capture** through a Kotlin `NotificationListenerService`, stored as it arrives
 - **Light and dark themes**, Material 3, following the system by default
 
 Deliberately incomplete: CSV export, the rule evaluation engine, custom
@@ -63,15 +64,19 @@ interface says plainly where a feature is missing instead of pretending it works
 
 | Platform | Status |
 | --- | --- |
-| Android | Supported. Full notification capture via the system notification listener. |
-| iOS | Builds and runs, **without** notification capture. iOS has no public API that lets one app read another app's notifications. The UI runs on seeded demo data. |
+| Android | Supported. Notification capture via the system notification listener, and the installed-app list via the package manager. |
+| iOS | Builds and runs, **without** notification capture or installed-app discovery. iOS has no public API for either. The inbox stays empty. |
 
 SignalBox will not claim iOS parity it cannot have. On any platform without a
 notification-listener API the dashboard says so in a banner.
 
 ## Screenshots
 
-See [`docs/screenshots/`](docs/screenshots/).
+The **Applications** screen below is real: those are the emulator's own
+installed apps and their real launcher icons. The other screens are shown with
+the developer fixtures loaded, because SignalBox ships no sample data and a
+fresh install is empty by design. See
+[`docs/screenshots/README.md`](docs/screenshots/README.md).
 
 | Dashboard | Inbox | Statistics |
 | --- | --- | --- |
@@ -138,8 +143,15 @@ flutter run -d <device-id>
 flutter build apk --debug          # or --release
 ```
 
-On first launch SignalBox seeds a deterministic demo inbox so the UI is useful
-immediately. The seed is skipped as soon as real notifications exist.
+SignalBox starts **empty**. It contains no sample notifications and no built-in
+list of applications: the Applications screen is read from your device's package
+manager, and the inbox fills up with your own notifications once you grant
+notification access.
+
+In a debug build, **Settings > Developer > Load issue fixtures** inserts a small
+fictional dataset. That exists only so the catalogued issues can be reproduced
+identically on every machine; it is never loaded automatically and is not
+reachable in a release build.
 
 ### Enabling real notification capture (Android)
 
@@ -191,9 +203,9 @@ convention, review expectations and the full checklist. Also read
 Be aware of these before filing a bug:
 
 - **Known seeded bugs.** 12 of them, listed in [`docs/SEEDED_BUGS.md`](docs/SEEDED_BUGS.md). Please do not open duplicates.
-- **Rules do not run.** They are stored and editable, but nothing applies them to incoming notifications yet (`F2`).
-- **Android only, for capture.** iOS builds but cannot read other apps' notifications.
-- **No application icons.** Apps are shown as coloured monograms; icons are not read from the package manager.
+- **Rules do not run.** They are stored and editable, but nothing applies them to incoming notifications. A captured notification gets Android's own priority hint and no category (`F2`).
+- **Android only, for capture and for the app list.** iOS builds but can neither read other apps' notifications nor enumerate installed applications.
+- **The inbox starts empty.** SignalBox has no sample data. Until you grant notification access there is nothing to show, by design.
 - **No export, no backup.** Your data is in one SQLite file and there is no supported way to move it yet (`F1`, `F6`).
 - **Retention is not enforced.** The setting exists; nothing deletes old data (`F7`).
 - **No pagination indexes.** Queries are unindexed and will degrade with a very large history (`Q1`).
